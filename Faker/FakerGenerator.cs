@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Faker
@@ -11,6 +13,7 @@ namespace Faker
         // public method for usege
         public T Create<T>()
         {
+            Thread.Sleep(1);
             return (T)Create(typeof(T));
         }
 
@@ -19,29 +22,28 @@ namespace Faker
         {
             var instance = CreateInstance(t);
 
+            var valueTypeGeneratorMethods = GetAllValueTypesGeneratorMethodsName();
+            foreach (var item in valueTypeGeneratorMethods)
+            {
+                var temp = GetType().GetMethod(item, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(this, new object[] { });
 
-            Type doubleType = typeof(double);
-            Type intType = typeof(int);
-            Type boolType = typeof(bool);
-            Type longType = typeof(long);
-            Type floatType = typeof(float);
-            Type byteType = typeof(byte);
-            Type charType = typeof(char);
-            Type shortType = typeof(short);
-            Type decimalType = typeof(decimal);
-            Type stringType = typeof(string);
+                if (t != temp.GetType())
+                    continue;
+                else
+                {
+                    instance = temp;
+                    return instance;
+                }
 
+            }
 
-
-
-
-
-
-
-            StringBuilder sb = new StringBuilder("");
 
             return null;
         }
+
+
+
+
 
 
 
@@ -61,10 +63,6 @@ namespace Faker
         }
 
 
-
-
-
-
         private string GenerateRandomString(int length)
         {
             Random random = new Random();
@@ -81,7 +79,7 @@ namespace Faker
         private int GenerateRandomIntegerNumber()
         {
             Random random = new Random();
-            return random.Next(0, int.MaxValue);
+            return random.Next(int.MinValue, int.MaxValue);
         }
 
         private double GenerateRandomDoubleNumber()
@@ -103,13 +101,20 @@ namespace Faker
 
         private long GenerateRandomLongNumber()
         {
-            return GenerateRandomIntegerNumber();
+            Random random = new Random();
+            byte[] bytes = new byte[8];
+            random.NextBytes(bytes);
+            return BitConverter.ToInt64(bytes, 0);
         }
 
         private float GenerateRandomFloatNumber()
         {
             Random random = new Random();
-            return (float)(random.NextDouble() + random.Next(0, int.MaxValue));
+
+            var array = new byte[4];
+            random.NextBytes(array);
+
+            return BitConverter.ToSingle(array, 0);
         }
 
         private byte GenerateRandomByteNumber()
@@ -134,7 +139,7 @@ namespace Faker
         private short GenerateRandomShortNumber()
         {
             Random random = new Random();
-            return (short)random.Next(0, short.MaxValue);
+            return (short)random.Next(short.MinValue, short.MaxValue);
         }
 
         private decimal GenerateRandomDecimalNumber()
@@ -142,5 +147,26 @@ namespace Faker
             Random random = new Random();
             return (decimal)GenerateRandomDoubleNumber();
         }
+
+
+
+
+        private List<string> GetAllValueTypesGeneratorMethodsName()
+        {
+            List<string> result = new List<string>();
+
+            result.Add(nameof(GenerateRandomDoubleNumber));
+            result.Add(nameof(GenerateRandomDecimalNumber));
+            result.Add(nameof(GenerateRandomFloatNumber));
+            result.Add(nameof(GenerateRandomLongNumber));
+            result.Add(nameof(GenerateRandomIntegerNumber));
+            result.Add(nameof(GenerateRandomShortNumber));
+            result.Add(nameof(GenerateRandomCharValue));
+            result.Add(nameof(GenerateRandomByteNumber));
+            result.Add(nameof(GenerateRandomBoolValue));
+
+            return result;
+        }
+
     }
 }
