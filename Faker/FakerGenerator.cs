@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +21,66 @@ namespace Faker
         // private method for proceeding
         private object Create(Type t)
         {
+            if (t.IsValueType)
+            {
+                return GenerateInstanceWithValueTypeVariable(t);
+            }
+            else
+            {
+                // If our reference type is a string - return a randomly generated string
+                if (t.IsSerializable && t.IsSecurityTransparent && t.IsSealed && !t.IsSecurityCritical)
+                    return GenerateInstanceWithAStringValue(t,10);
+
+                // Getting all class constructors
+                var constructorInfoObjects = t.GetConstructors();
+
+                // Looking for constructor with the biggest number of parameters
+                int ctorParametersLength = 0;
+                byte ctorIndex = 0;
+                byte counter = 0;
+                foreach (var constructor in constructorInfoObjects)
+                {
+                    if (constructor.GetParameters().Length > ctorParametersLength)
+                    {
+                        ctorIndex = counter;
+                        ctorParametersLength = constructor.GetParameters().Length;
+                    }
+                    counter++;
+                }
+
+                // Getting constructor with the biggest number of parameters
+                var maxParamConstructor = constructorInfoObjects.Where(c => c.GetParameters().Length == ctorParametersLength).First();
+
+                // Getting its parameters information
+                ParameterInfo[] parametersInfo = maxParamConstructor.GetParameters();
+
+                // Generating an array wich will have random generated parameters to create a new object Type t
+                object[] parameters = new object[parametersInfo.Length];
+
+                // Filling array of object with a random data using the recursion
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    parameters[i] = this.Create(parametersInfo[i].ParameterType);
+                }
+
+                // Generating an object with a random data 
+                var randomlyGeneratedObject = maxParamConstructor.Invoke(parameters);
+
+                // Return created object
+                return randomlyGeneratedObject;
+            }
+        }
+
+
+
+
+
+
+
+
+        private object GenerateInstanceWithValueTypeVariable(Type t)
+        {
+            Thread.Sleep(1);
             var instance = CreateInstance(t);
 
             var valueTypeGeneratorMethods = GetAllValueTypesGeneratorMethodsName();
@@ -36,19 +97,26 @@ namespace Faker
                 }
 
             }
-
-
-            return null;
+            throw new Exception("Error. Value type was not created.");
         }
 
 
+        private object GenerateInstanceWithAStringValue(Type t, byte strLength)
+        {
+            Thread.Sleep(1);
+            var instance = CreateInstance(t);
 
-
-
-
-
-
-
+            try
+            {
+                instance = GenerateRandomString(strLength);
+                return instance;
+            }
+            catch (Exception)
+            {
+                throw new Exception("Error. String type was not created.");
+            }
+            
+        }
 
 
 

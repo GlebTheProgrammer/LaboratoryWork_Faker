@@ -1,14 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using ConsoleApplication.TestClasses;
 using Faker;
 
 namespace ConsoleApplication
 {
-    internal class Program
+    public class Test
+    {
+
+    }
+
+    public class Program
     {
         static void Main(string[] args)
         {
@@ -41,11 +49,13 @@ namespace ConsoleApplication
             Console.WriteLine($"{nameof(doubleVar)} = {doubleVar}");
 
 
+            Console.WriteLine("\nReference type objects:\n");
+            var person = faker.Create<Person>();
+            Console.WriteLine($"Name: {person.Name}");
+            Console.WriteLine($"Surname: {person.Surname}");
+            Console.WriteLine($"Age: {person.Age}");
+            Console.WriteLine($"Is Married: {person.IsMarried}");
 
-            //int b = 10;
-
-            //string json = JsonSerializer.Serialize(b);
-            //Console.WriteLine(json);
         }
     }
 }
