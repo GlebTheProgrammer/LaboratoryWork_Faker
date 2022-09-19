@@ -56,6 +56,9 @@ namespace ConsoleApplication
             Console.WriteLine($"Age: {person.Age}");
             Console.WriteLine($"Is Married: {person.IsMarried}");
 
+            List<int> ints = faker.Create<List<int>>();
+            List<List<int>> ints2 = faker.Create<List<List<int>>>();
+            List<Person> test = faker.Create<List<Person>>();
         }
     }
 }
