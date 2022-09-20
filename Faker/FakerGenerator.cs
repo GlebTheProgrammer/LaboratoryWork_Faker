@@ -23,6 +23,9 @@ namespace Faker
         // private method for proceeding
         private object Create(Type t)
         {
+            if (!HasNotCyclicDependency(t))
+                throw new Exception("ERROR! Cyclic Dependency was found.");
+
             if (t.IsValueType)
             {
                 return GenerateInstanceWithValueTypeVariable(t);
@@ -319,6 +322,34 @@ namespace Faker
             result.Add(nameof(GenerateRandomBoolValue));
 
             return result;
+        }
+
+        private bool HasNotCyclicDependency(Type t)
+        {
+            var objectProperties = t.GetProperties().ToList();
+
+            foreach (var property in objectProperties)
+            {
+                if (WrongInsideDependency(t, property.PropertyType))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private bool WrongInsideDependency(Type baseType, Type currentType)
+        {
+            var currObjectProperties = currentType.GetProperties().ToList();
+
+            foreach (var property in currObjectProperties)
+            {
+                if (property.PropertyType == baseType)
+                    return true;
+                else
+                    WrongInsideDependency(baseType, property.PropertyType);
+            }
+
+            return false;
         }
 
     }

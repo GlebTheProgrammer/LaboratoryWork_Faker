@@ -59,6 +59,8 @@ namespace ConsoleApplication
             List<int> ints = faker.Create<List<int>>();
             List<List<int>> ints2 = faker.Create<List<List<int>>>();
             List<Person> test = faker.Create<List<Person>>();
+
+            var a = faker.Create<A>();
         }
     }
 }
