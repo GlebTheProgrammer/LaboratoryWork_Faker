@@ -16,7 +16,7 @@ namespace ConsoleApplication.TestClasses
             IsMarried = isMarried;
         }
 
-       
+        public int TimesHeWasFired { get; set; }
 
         public string Name { get; set; }
         public string Surname { get; set; }

@@ -111,6 +111,21 @@ namespace Faker
             // Generating an object with a random data 
             var randomlyGeneratedObject = maxParamConstructor.Invoke(parameters);
 
+            var propertyInfos = randomlyGeneratedObject.GetType().GetProperties().Where(p => !p.SetMethod.IsPrivate).ToList();
+
+            for (int i = 0; i < propertyInfos.Count; i++)
+            {
+                var generatedObjectType = randomlyGeneratedObject.GetType();
+                var objectPropertyTakenByName = generatedObjectType.GetProperty(propertyInfos[i].Name);
+
+                var objectPropertyType = objectPropertyTakenByName.GetValue(randomlyGeneratedObject).GetType();
+                var generatedProperty = this.Create(objectPropertyType);
+
+                objectPropertyTakenByName.SetValue(randomlyGeneratedObject,
+                generatedProperty, null);
+
+            }
+
             // Return created object
             return randomlyGeneratedObject;
         }
