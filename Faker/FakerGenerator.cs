@@ -23,14 +23,18 @@ namespace Faker
         // private method for proceeding
         private object Create(Type t)
         {
+            // Check whether there is cyclic dependency in the selected type or not
             if (!HasNotCyclicDependency(t))
                 throw new Exception("ERROR! Cyclic Dependency was found.");
 
+            // If we have a valueType variable -> create an instance with valueType
             if (t.IsValueType)
-            {
-                return GenerateInstanceWithValueTypeVariable(t);
+            {   if (!t.IsSecurityCritical && t.IsSecurityTransparent && t.IsSerializable)
+                    return GenerateInstanceWithValueTypeVariable(t);
+                else
+                    return GenerateInstanceWithAStructureVariable(t);
             }
-            else
+            else // Otherwise -> work with reference type
             {
                 // If our reference type is a string - return a randomly generated string
                 if (t.IsSerializable && t.IsSecurityTransparent && t.IsSealed && !t.IsSecurityCritical)
@@ -48,7 +52,16 @@ namespace Faker
 
 
 
-
+        // Method wich return an instance with an instance based on type variable
+        private object CreateInstance(Type t)
+        {
+            if (t.IsValueType)
+                // Для типов-значений вызов конструктора по умолчанию даст default(T).
+                return Activator.CreateInstance(t);
+            else
+                // Для ссылочных типов значение по умолчанию всегда null.
+                return null;
+        }
 
         // Method wich will generate a value type variable
         private object GenerateInstanceWithValueTypeVariable(Type t)
@@ -90,6 +103,18 @@ namespace Faker
             }
             
         }
+        private string GenerateRandomString(int length)
+        {
+            Random random = new Random();
+            var sb = new StringBuilder(string.Empty);
+
+            for (int i = 0; i < length; i++)
+            {
+                sb.Append(Convert.ToChar(random.Next(97, 123)));
+            }
+
+            return sb.ToString();
+        }
 
         // Method wich will generate a generic variable
         private object GenerateInstanceWithAGenericTypeVariable(Type t)
@@ -115,6 +140,7 @@ namespace Faker
             var randomlyGeneratedObject = maxParamConstructor.Invoke(parameters);
 
             var propertyInfos = randomlyGeneratedObject.GetType().GetProperties().Where(p => !p.SetMethod.IsPrivate).ToList();
+            var publicFields = randomlyGeneratedObject.GetType().GetFields().Where(p => !p.IsPrivate).ToList();
 
             for (int i = 0; i < propertyInfos.Count; i++)
             {
@@ -126,7 +152,18 @@ namespace Faker
 
                 objectPropertyTakenByName.SetValue(randomlyGeneratedObject,
                 generatedProperty, null);
+            }
 
+            for (int i = 0; i < publicFields.Count; i++)
+            {
+                var generatedObjectType = randomlyGeneratedObject.GetType();
+                var objectFieldTakenByName = generatedObjectType.GetField(publicFields[i].Name);
+
+                var objectFieldType = objectFieldTakenByName.GetValue(randomlyGeneratedObject).GetType();
+                var generatedProperty = this.Create(objectFieldType);
+
+                objectFieldTakenByName.SetValue(randomlyGeneratedObject,
+                generatedProperty);
             }
 
             // Return created object
@@ -175,40 +212,12 @@ namespace Faker
             return maxParamConstructor;
         }
 
-
-
-
-
-
-
-
-
-
-
-        private object CreateInstance(Type t)
+        // Method wich will generate a struc variable
+        private object GenerateInstanceWithAStructureVariable(Type t)
         {
-            if (t.IsValueType)
-                // Для типов-значений вызов конструктора по умолчанию даст default(T).
-                return Activator.CreateInstance(t);
-            else
-                // Для ссылочных типов значение по умолчанию всегда null.
-                return null;
+            // If we deal with a structure -> we can create it the same way as a class type variable
+            return GenerateInstanceWithAClassTypeVariable(t);
         }
-
-
-        private string GenerateRandomString(int length)
-        {
-            Random random = new Random();
-            var sb = new StringBuilder(string.Empty);
-
-            for (int i = 0; i < length; i++)
-            {
-                sb.Append(Convert.ToChar(random.Next(97, 123)));
-            }
-
-            return sb.ToString();
-        }
-
 
         // Methods wich generate random value type variables
         private int GenerateRandomIntegerNumber()
@@ -279,26 +288,26 @@ namespace Faker
 
         private IList GenerateRandomList(Type t, IList emptyList, int countOfTheVariablesInside)
         {
+            // Create a specific amount of variables
             for (int i = 0; i < countOfTheVariablesInside; i++)
             {
+                // Searching for a constructor with maxed number of parameters
                 object variable;
                 var sortedCtors = t.GetConstructors().ToList();
                 sortedCtors.Sort((x, y) => x.GetParameters().Length.CompareTo(y.GetParameters().Length));
                 var ctor = sortedCtors.FirstOrDefault();
-
+                
+                // If there is no constructor with parameters -> create default instance
                 if (ctor == null || ctor.GetParameters().Length == 0)
                 {
                     variable = Activator.CreateInstance(t);
                 }
-                else
+                else // Otherwise -> create instance using the specific object parameters
                 {
                     variable = Activator.CreateInstance(t, GenerateParamsForAClassTypeVariables(t));
                 }
-               
 
-                
-              
-
+                // Convert an object type to the needed type
                 var createdItem = Convert.ChangeType(this.Create(t), t);
 
                 emptyList.Add(createdItem);
@@ -324,8 +333,10 @@ namespace Faker
             return result;
         }
 
+        // Main method wich is looking for a cyclic dependency
         private bool HasNotCyclicDependency(Type t)
         {
+            // Getting main type properties 
             var objectProperties = t.GetProperties().ToList();
 
             foreach (var property in objectProperties)
@@ -333,24 +344,24 @@ namespace Faker
                 if (WrongInsideDependency(t, property.PropertyType))
                     return false;
             }
-
             return true;
         }
 
+        // Supply method wich is looking for a cyclic dependency using the recursion
         private bool WrongInsideDependency(Type baseType, Type currentType)
         {
+            // Getting current type properties 
             var currObjectProperties = currentType.GetProperties().ToList();
 
             foreach (var property in currObjectProperties)
             {
+                // If we have the same property wich is equals to the base type -> cyclic dependency was found
                 if (property.PropertyType == baseType)
                     return true;
-                else
+                else // If not - start another recursion search
                     WrongInsideDependency(baseType, property.PropertyType);
             }
-
             return false;
         }
-
     }
 }

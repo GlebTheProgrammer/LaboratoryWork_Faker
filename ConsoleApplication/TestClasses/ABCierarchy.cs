@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace ConsoleApplication.TestClasses
 {
+    // Classes wich are needed to check the program for a cyclic dependency
+
     public class A
     {
         public A helloA;

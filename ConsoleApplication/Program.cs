@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using ConsoleApplication.TestClasses;
+using ConsoleApplication.TestStructures;
 using Faker;
 
 namespace ConsoleApplication
@@ -59,6 +60,8 @@ namespace ConsoleApplication
             List<int> ints = faker.Create<List<int>>();
             List<List<int>> ints2 = faker.Create<List<List<int>>>();
             List<Person> test = faker.Create<List<Person>>();
+
+            var structtemp = faker.Create<House>();
 
             var a = faker.Create<A>();
         }
