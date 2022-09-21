@@ -29,10 +29,18 @@ namespace Faker
 
             // If we have a valueType variable -> create an instance with valueType
             if (t.IsValueType)
-            {   if (!t.IsSecurityCritical && t.IsSecurityTransparent && t.IsSerializable)
+            {
+                try // try catch block for properly unit testing logic
+                {
+                    if (!t.IsSecurityCritical && t.IsSecurityTransparent && t.IsSerializable)
+                        return GenerateInstanceWithValueTypeVariable(t);
+                    else
+                        return GenerateInstanceWithAStructureVariable(t);
+                }
+                catch (Exception)
+                {
                     return GenerateInstanceWithValueTypeVariable(t);
-                else
-                    return GenerateInstanceWithAStructureVariable(t);
+                }
             }
             else // Otherwise -> work with reference type
             {
