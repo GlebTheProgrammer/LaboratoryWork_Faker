@@ -36,6 +36,8 @@ namespace ConsoleApplication
             var decimalVar = faker.Create<decimal>();
             var doubleVar = faker.Create<double>();
 
+            Console.WriteLine("Value Types:\n");
+
             Console.WriteLine($"{nameof(boolVar)} = {boolVar}");
             Console.WriteLine($"{nameof(bool2Var)} = {bool2Var}");
             Console.WriteLine($"{nameof(byteVar)} = {byteVar}");
@@ -50,20 +52,68 @@ namespace ConsoleApplication
             Console.WriteLine($"{nameof(doubleVar)} = {doubleVar}");
 
 
-            Console.WriteLine("\nReference type objects:\n");
+            Console.WriteLine("\nReference type object (Single Person):\n");
+
             var person = faker.Create<Person>();
             Console.WriteLine($"Name: {person.Name}");
             Console.WriteLine($"Surname: {person.Surname}");
             Console.WriteLine($"Age: {person.Age}");
             Console.WriteLine($"Is Married: {person.IsMarried}");
 
+            Console.WriteLine("\nList of ints:\n");
+
             List<int> ints = faker.Create<List<int>>();
+
+            foreach (var intVal in ints)
+            {
+                Console.WriteLine($"{nameof(intVal)}_{ints.IndexOf(intVal)} = {intVal}");
+            }
+
+            Console.WriteLine("\nList of Lists of ints:\n");
+
             List<List<int>> ints2 = faker.Create<List<List<int>>>();
-            List<Person> test = faker.Create<List<Person>>();
 
-            var structtemp = faker.Create<House>();
+            foreach (var intList in ints2)
+            {
+                Console.WriteLine($"List_{ints2.IndexOf(intList)}");
+                foreach (var intVal in intList)
+                {
+                    Console.WriteLine($"{nameof(intVal)}_{intList.IndexOf(intVal)} = {intVal}");
+                }
+                Console.WriteLine();
+            }
 
-            var a = faker.Create<A>();
+            Console.WriteLine("\nList of Persons:\n");
+
+            List<Person> persons = faker.Create<List<Person>>();
+
+            foreach (var personItem in persons)
+            {
+                Console.WriteLine($"Person_{persons.IndexOf(personItem)}");
+                Console.WriteLine($"Name: {personItem.Name}");
+                Console.WriteLine($"Surname: {personItem.Surname}");
+                Console.WriteLine($"Age: {personItem.Age}");
+                Console.WriteLine($"Is Married: {personItem.IsMarried}\n");
+            }
+
+            Console.WriteLine("\nStructure (House):\n");
+
+            var house = faker.Create<House>();
+            Console.WriteLine($"BlockOfFlatsNumber: {house.BlockOfFlatsNumber}");
+            Console.WriteLine($"NumberOfPeopleInIt: {house.NumberOfPeopleInIt}");
+
+            Console.WriteLine("\nCyclic dependency cheeeeck:\n");
+
+            try
+            {
+                var a = faker.Create<A>();
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Here I am, cycic dependency exception!");
+            }
+
+            Console.ReadLine();
         }
     }
 }
